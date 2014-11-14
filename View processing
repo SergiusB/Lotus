@@ -1,0 +1,56 @@
+Dim db As NotesDatabase
+Dim searchview As NotesView
+Dim dbpath As String
+
+Sub SearchDataInView
+  If Not initVariables Then Exit Sub
+
+  Dim curDoc As NotesDocument
+	Dim i,NumOfDocsInView As Long
+	
+	docsCount = 0
+	i = 0
+	
+	Set curDoc = searchview.GetFirstDocument
+	NumOfDocsInView = searchview.EntryCount
+	valuesCount = 0 ' количество найденных уникальных значений анализируемого поля
+	
+	Do While Not(curDoc Is Nothing)
+		i = i + 1
+		If curDoc.Form(0) = doc_cur.SearchFormName(0) Then 			
+		' формирование списка с данными по партнерам
+			Set DocsList(curDoc.UniversalID) = New DocsStructure(curDoc)
+		End If
+		Set curDoc = searchview.GetNextDocument(curDoc)
+		If (i Mod 100 = 0) Then Print "Анализ данных: " + Cstr(i) + "/" + Cstr(NumOfDocsInView) + " (" + Format(i / NumOfDocsInView, "#0%") + ") ... "
+	Loop
+	
+	Print "Поиск закончен"
+	
+' вывод отчета...
+
+End Sub
+
+
+Function InitVariables As Variant
+	
+	InitVariables = False
+	
+	Set db = New NotesDatabase( db_cur.Server, dbpath + doc_cur.Database(0))
+	If Not db.IsOpen Then
+		Messagebox "БД не найдена. Обратитесь к разработчикам.", 0, "БД не найдена"
+		Exit Function
+	End If
+	
+	Set searchview = db.GetView(doc_cur.SearchViewName(0))
+	If searchview Is Nothing Then 
+		Messagebox {В БД не найдено указанное представление.}, 0,  "Представление не существует"
+		Exit Function
+	End If	
+	
+	' Инициализация списков
+	Erase DocsList
+	
+	InitVariables = True
+	
+End Function
